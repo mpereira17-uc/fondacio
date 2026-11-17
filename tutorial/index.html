@@ -1,0 +1,308 @@
+<meta charset="utf-8">
+<title>Tutorial Fondacio Agenda</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: one working screen — chapter rail on top, the real app screen as the stage, narration and controls underneath. */
+:root{
+  --bg:#f4f6fb; --panel:#ffffff; --ink:#1b2130; --muted:#5b6476; --line:#dde2ec;
+  --accent:#0b57d0; --accent-ink:#ffffff; --soft:#e7effd;
+  --spot:#f6a609; --spot-glow:rgba(246,166,9,.35);
+  --ok:#1e8e3e; --ok-soft:#e6f4ea; --bad:#c5221f; --bad-soft:#fce8e6;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11151d; --panel:#1a202b; --ink:#e8ecf4; --muted:#a3acbd; --line:#2c3443;
+  --accent:#8ab4f8; --accent-ink:#0d1a33; --soft:#1f2b40;
+  --spot:#fbbc04; --spot-glow:rgba(251,188,4,.32);
+  --ok:#81c995; --ok-soft:#1d3325; --bad:#f28b82; --bad-soft:#3b2020; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151d; --panel:#1a202b; --ink:#e8ecf4; --muted:#a3acbd; --line:#2c3443;
+  --accent:#8ab4f8; --accent-ink:#0d1a33; --soft:#1f2b40;
+  --spot:#fbbc04; --spot-glow:rgba(251,188,4,.32);
+  --ok:#81c995; --ok-soft:#1d3325; --bad:#f28b82; --bad-soft:#3b2020; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.mk{width:38px;height:38px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:800 22px var(--f-display);flex:none}
+.brand h1{font:700 21px/1.1 var(--f-display);margin:0;text-wrap:balance}
+.brand small{display:block;color:var(--muted);font-size:13px;font-family:var(--f-body);font-weight:400}
+.caps{display:flex;gap:6px;flex-wrap:wrap}
+.cap{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:14px;color:var(--muted)}
+.cap[aria-current="step"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.cap.done{color:var(--ink)}
+.cap.done::before{content:"✓ ";color:var(--ok)}
+.cap[aria-current="step"].done::before{color:inherit}
+.bar{height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .35s ease}
+
+/* instruction */
+.now{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+.now .n{font:800 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.now .h{font:700 20px/1.25 var(--f-display);flex:1;min-width:0}
+.now .dot{width:14px;height:14px;border-radius:50%;background:var(--spot);box-shadow:0 0 0 6px var(--spot-glow);flex:none}
+.now.nudge{animation:nudge .45s ease}
+@keyframes nudge{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* stage */
+.stage{position:relative;aspect-ratio:16/10;max-width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 28px rgba(20,40,90,.08)}
+.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none}
+.spot{position:absolute;border:3px solid var(--spot);border-radius:12px;background:transparent;padding:0;
+  box-shadow:0 0 0 9999px rgba(15,20,35,.28),0 0 0 6px var(--spot-glow);animation:pulse 1.6s ease-in-out infinite;transition:left .3s,top .3s,width .3s,height .3s}
+.spot::after{content:"";position:absolute;inset:-12px;border-radius:16px;border:2px solid var(--spot);opacity:0;animation:ring 1.6s ease-out infinite}
+.spot.big{animation:pulse .5s ease-in-out 3}
+@keyframes pulse{50%{box-shadow:0 0 0 9999px rgba(15,20,35,.28),0 0 0 12px var(--spot-glow)}}
+@keyframes ring{0%{opacity:.9;transform:scale(.9)}100%{opacity:0;transform:scale(1.25)}}
+.tap{position:absolute;inset:0;background:transparent;border:0;padding:0;cursor:default}
+
+/* narration + controls */
+.under{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start}
+.lines{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.lines p{margin:0;color:var(--muted);transition:color .2s}
+.lines p.on{color:var(--ink);font-weight:700}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:9px 16px;font-weight:700;min-height:44px}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn[aria-pressed="false"] .on-ico{display:none}
+.btn[aria-pressed="true"] .off-ico{display:none}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* cards: intro, quiz, end */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:clamp(20px,4vw,40px);display:grid;gap:18px}
+.card h2{font:800 clamp(28px,4.5vw,44px)/1.08 var(--f-display);margin:0;text-wrap:balance}
+.card .lead{font-size:19px;color:var(--muted);margin:0;max-width:62ch}
+.intro{grid-template-columns:1.1fr 1fr;align-items:center}
+.intro img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line)}
+.list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.list li{display:flex;gap:10px;align-items:baseline}
+.list b{font-family:var(--f-display);color:var(--accent);min-width:1.4em}
+.note{font-size:14px;color:var(--muted)}
+.q{display:grid;gap:10px}
+.q h3{font:700 22px/1.3 var(--f-display);margin:0}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:2px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px;min-height:48px}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.fb{margin:0;font-weight:700}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.score{font:800 64px/1 var(--f-display);color:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:760px){
+  body{font-size:16px}
+  .intro{grid-template-columns:1fr}
+  .under{grid-template-columns:1fr}
+  .ctrl{justify-content:stretch}
+  .ctrl .btn{flex:1;justify-content:center}
+  .ctrl .btn .lbl{display:none}
+  .ctrl .btn.pri .lbl{display:inline}
+  .now .h{font-size:17px}
+  .brand h1{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="mk" aria-hidden="true">F</span><h1>Fondacio Agenda<small>Tutorial: aprende tocando</small></h1></div>
+    <nav class="caps" id="caps" aria-label="Capítulos"></nav>
+  </header>
+  <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+
+  <!-- Intro (visible at rest) -->
+  <section class="card intro" id="vIntro">
+    <div style="display:grid;gap:16px;min-width:0">
+      <h2>Aprende a usar Fondacio Agenda tocando los mismos botones</h2>
+      <p class="lead">Un recorrido de unos 6 minutos por la página real. En cada pantalla una voz te explica qué ves y un recuadro amarillo te muestra qué tocar.</p>
+      <ul class="list">
+        <li><b>1</b>Entrar y elegir tu calendario</li>
+        <li><b>2</b>Ver y crear actividades</li>
+        <li><b>3</b>Seguir los compromisos de las actas de los viernes</li>
+        <li><b>4</b>Usar el asistente con inteligencia artificial</li>
+        <li><b>5</b>Un repaso de cinco preguntas</li>
+      </ul>
+      <div class="row"><button class="btn pri" id="start"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Empezar</button><span class="note">Sube el volumen: tiene narración.</span></div>
+      <p class="note">Laura, Camilo y Marta son personas inventadas para el ejemplo. Las actividades y actas también.</p>
+    </div>
+    <img src="img/general.jpg" alt="Calendario general de Fondacio Agenda con actividades de colores en la vista de semana" width="1600" height="1000">
+  </section>
+
+  <!-- Tutorial -->
+  <section id="vTour" hidden>
+    <div style="display:grid;gap:14px">
+      <div class="now" id="now" aria-live="polite"><span class="dot" aria-hidden="true"></span><span class="n" id="cnt"></span><span class="h" id="hint"></span></div>
+      <div class="stage" id="stage">
+        <img id="shot" alt="">
+        <button class="tap" id="tap" tabindex="-1" aria-hidden="true"></button>
+        <button class="spot" id="spot"></button>
+      </div>
+      <div class="under">
+        <div class="lines" id="lines"></div>
+        <div class="ctrl">
+          <button class="btn" id="back" aria-label="Paso anterior"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg><span class="lbl">Atrás</span></button>
+          <button class="btn" id="again" aria-label="Repetir narración"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5V1L7 6l5 5V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg><span class="lbl">Repetir</span></button>
+          <button class="btn" id="snd" aria-pressed="true" aria-label="Narración"><svg class="on-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg><svg class="off-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 12A4.5 4.5 0 0 0 14 8v2.2l2.5 2.5V12zM19 12a7 7 0 0 1-.6 2.8l1.5 1.5A9 9 0 0 0 14 3.2v2.1A7 7 0 0 1 19 12zM4.3 3 3 4.3 7.7 9H3v6h4l5 5v-6.7l4.3 4.2c-.7.5-1.4.9-2.3 1.2v2.1a9 9 0 0 0 3.7-1.8l2 2 1.3-1.3L4.3 3zM12 4 9.9 6.1 12 8.2V4z"/></svg><span class="lbl">Voz</span></button>
+          <button class="btn pri" id="next"><span class="lbl">Siguiente</span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.6 16.6 10 18l6-6-6-6-1.4 1.4 4.6 4.6z"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz -->
+  <section class="card" id="vQuiz" hidden>
+    <div class="row" style="justify-content:space-between"><h2 style="font-size:clamp(24px,3.5vw,34px)">Repaso rápido</h2><span class="note" id="qn"></span></div>
+    <div class="q" id="q"></div>
+    <div class="row"><button class="btn pri" id="qnext" hidden>Siguiente pregunta</button></div>
+  </section>
+
+  <!-- End -->
+  <section class="card" id="vEnd" hidden>
+    <h2>Ya sabes usar Fondacio Agenda</h2>
+    <div class="row" style="gap:18px"><span class="score" id="score"></span><p class="lead" id="scoreTxt" style="margin:0"></p></div>
+    <ul class="list">
+      <li><b>·</b>Lunes: mira tu semana en tu calendario.</li>
+      <li><b>·</b>Entre semana: crea actividades con el botón Crear.</li>
+      <li><b>·</b>Viernes: abre el acta, que ya está lista, y marca lo cumplido y lo nuevo.</li>
+      <li><b>·</b>Después: guarda el acta en Google Docs o en Word.</li>
+    </ul>
+    <p class="lead" style="color:var(--ink);font-weight:700">Así, ningún compromiso se queda en el aire.</p>
+    <div class="row"><button class="btn pri" id="restart">Volver a empezar</button><button class="btn" id="redoQuiz">Repetir el repaso</button></div>
+  </section>
+</div>
+<audio id="aud" preload="auto"></audio>
+
+<script>
+const $=s=>document.querySelector(s);
+const CAPS=["Entrar","Calendario","Crear","Actas","Asistente","Repaso"];
+const QUIZ=[
+ {q:"¿Qué muestra el calendario general?",o:["Solo tus actividades","Las actividades de todo el equipo","Solo las actas"],a:1,
+  e:"Tu calendario muestra lo tuyo; el general, lo de todo el equipo."},
+ {q:"Un compromiso que nadie vuelve a mencionar en las actas…",o:["Se borra solo","Queda en el aire, marcado en amarillo","Se marca como cumplido"],a:1,
+  e:"Queda en amarillo para que no se olvide en la siguiente reunión."},
+ {q:"Antes de pegar la transcripción de una reunión para la IA, ¿qué debes hacer?",o:["Traducirla al inglés","Nada, se puede pegar tal cual","Quitar los nombres de niños y otros datos personales"],a:2,
+  e:"El texto se envía al proveedor de IA, por eso hay que quitar los datos personales."},
+ {q:"¿Cómo se escribe un compromiso en el acta para que la página lo entienda?",o:["Uno por viñeta, con el nombre de quien lo hace al inicio","Varios juntos en un párrafo","Sin nombre, para no señalar a nadie"],a:0,
+  e:"Un compromiso por viñeta, el nombre al inicio, fechas con día y mes."},
+ {q:"¿Dónde se guardan los datos de Fondacio Agenda?",o:["En una nube compartida","Solo en el navegador de cada persona","En Google Docs"],a:1,
+  e:"Por eso lo del computador de la oficina no aparece en el celular."},
+];
+let D=null,i=0,sound=true,qi=0,hits=0,lineTimer=null;
+const aud=$("#aud");
+
+fetch("pasos.json").then(r=>r.json()).then(j=>{D=j;
+  D.pasos.forEach(p=>{const im=new Image();im.src=p.img});
+  route();
+}).catch(()=>{$("#start").disabled=true;$("#start").textContent="No se pudo cargar el tutorial"});
+
+function capsUI(cur){
+  const done=new Set();
+  if(D&&cur!=="Repaso"&&cur!=="fin"){for(let k=0;k<i;k++)done.add(D.pasos[k].cap)}
+  if(cur==="Repaso"||cur==="fin")CAPS.slice(0,5).forEach(c=>done.add(c));
+  if(cur==="fin")done.add("Repaso");
+  $("#caps").innerHTML=CAPS.map(c=>`<button class="cap${done.has(c)&&c!==cur?" done":""}" data-c="${c}" ${c===cur?'aria-current="step"':""}>${c}</button>`).join("");
+}
+$("#caps").addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(!b||!D)return;const c=b.dataset.c;
+  if(c==="Repaso"){show("quiz");return}const k=D.pasos.findIndex(p=>p.cap===c);if(k>=0){i=k;show("tour")}});
+
+function play(src,t,box){
+  clearInterval(lineTimer);aud.pause();
+  if(!sound){return}
+  aud.src=src;aud.currentTime=0;aud.play().catch(()=>{});
+}
+function lines(frases,t){
+  $("#lines").innerHTML=frases.map(f=>`<p>${f}</p>`).join("");
+  const ps=[...$("#lines").children];
+  const mark=()=>{let k=0;const ct=aud.currentTime;t.forEach((s,j)=>{if(ct>=s-0.05)k=j});
+    ps.forEach((p,j)=>p.classList.toggle("on",sound&&!aud.paused?j===k:true))};
+  aud.ontimeupdate=mark;aud.onended=()=>ps.forEach(p=>p.classList.add("on"));aud.onpause=mark;mark();
+}
+function step(){
+  const p=D.pasos[i],n=D.pasos.length;
+  capsUI(p.cap);
+  $("#prog").style.width=((i+1)/(n+1)*100)+"%";
+  $("#cnt").textContent=`Paso ${i+1} de ${n}`;
+  $("#hint").textContent=p.hint;
+  const img=$("#shot");img.src=p.img;img.alt=p.frases[0];
+  const sp=$("#spot");
+  if(p.box){
+    const st=$("#stage").getBoundingClientRect(),min=40;
+    let w=p.box.w*st.width,h=p.box.h*st.height,x=p.box.x*st.width,y=p.box.y*st.height;
+    const pad=6;x-=pad;y-=pad;w+=pad*2;h+=pad*2;
+    if(w<min){x-=(min-w)/2;w=min}if(h<min){y-=(min-h)/2;h=min}
+    Object.assign(sp.style,{left:x/st.width*100+"%",top:y/st.height*100+"%",width:w/st.width*100+"%",height:h/st.height*100+"%"});
+    sp.hidden=false;sp.setAttribute("aria-label",p.hint);
+  }else sp.hidden=true;
+  $("#back").disabled=i===0;
+  $("#next").querySelector(".lbl").textContent=i===n-1?"Ir al repaso":"Siguiente";
+  lines(p.frases,p.t);play(p.voz);
+}
+let resizeT;addEventListener("resize",()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>{if(!$("#vTour").hidden)placeOnly()},120)});
+function placeOnly(){const keep=aud.currentTime,pl=!aud.paused;const p=D.pasos[i];if(!p.box)return;
+  const st=$("#stage").getBoundingClientRect(),min=40,pad=6;let w=p.box.w*st.width+pad*2,h=p.box.h*st.height+pad*2,x=p.box.x*st.width-pad,y=p.box.y*st.height-pad;
+  if(w<min){x-=(min-w)/2;w=min}if(h<min){y-=(min-h)/2;h=min}
+  Object.assign($("#spot").style,{left:x/st.width*100+"%",top:y/st.height*100+"%",width:w/st.width*100+"%",height:h/st.height*100+"%"})}
+
+function next(){if(i<D.pasos.length-1){i++;show("tour")}else show("quiz")}
+$("#spot").onclick=next;
+$("#next").onclick=next;
+$("#back").onclick=()=>{if(i>0){i--;show("tour")}};
+$("#again").onclick=()=>{if(!sound){sound=true;sndUI()}aud.currentTime=0;aud.play().catch(()=>{})};
+$("#tap").onclick=()=>{const now=$("#now"),sp=$("#spot");now.classList.remove("nudge");void now.offsetWidth;now.classList.add("nudge");
+  if(!sp.hidden){sp.classList.remove("big");void sp.offsetWidth;sp.classList.add("big")}};
+function sndUI(){$("#snd").setAttribute("aria-pressed",String(sound))}
+$("#snd").onclick=()=>{sound=!sound;sndUI();if(!sound)aud.pause();else{aud.play().catch(()=>{})}};
+addEventListener("keydown",e=>{if($("#vTour").hidden||e.target.closest("input,textarea"))return;
+  if(e.key==="ArrowRight")next();if(e.key==="ArrowLeft"&&i>0){i--;show("tour")}});
+
+function quiz(){
+  const Q=QUIZ[qi];capsUI("Repaso");
+  $("#prog").style.width=((D.pasos.length+qi/QUIZ.length)/(D.pasos.length+1)*100)+"%";
+  $("#qn").textContent=`Pregunta ${qi+1} de ${QUIZ.length}`;
+  $("#q").innerHTML=`<h3>${Q.q}</h3><div class="opts">${Q.o.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join("")}</div><p class="fb" id="fb" aria-live="polite"></p>`;
+  $("#qnext").hidden=true;
+}
+$("#q").addEventListener("click",e=>{const b=e.target.closest(".opt");if(!b||b.disabled)return;
+  const Q=QUIZ[qi],k=+b.dataset.k,ok=k===Q.a;if(ok)hits++;
+  document.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.k===Q.a)x.classList.add("ok")});
+  if(!ok)b.classList.add("bad");
+  const fb=$("#fb");fb.className="fb "+(ok?"ok":"bad");fb.textContent=(ok?"¡Correcto! ":"No exactamente. ")+Q.e;
+  const q=$("#qnext");q.hidden=false;q.textContent=qi<QUIZ.length-1?"Siguiente pregunta":"Ver resultado";q.focus();
+});
+$("#qnext").onclick=()=>{if(qi<QUIZ.length-1){qi++;quiz()}else show("fin")};
+$("#restart").onclick=()=>{i=0;show("tour")};
+$("#redoQuiz").onclick=()=>show("quiz");
+$("#start").onclick=()=>{if(!D)return;i=0;show("tour")};
+
+function show(v){
+  ["vIntro","vTour","vQuiz","vEnd"].forEach(id=>$("#"+id).hidden=true);
+  if(v==="tour"){$("#vTour").hidden=false;step();try{history.replaceState(null,"","#paso-"+(i+1))}catch(e){}}
+  else if(v==="quiz"){aud.pause();qi=0;hits=0;$("#vQuiz").hidden=false;quiz();try{history.replaceState(null,"","#repaso")}catch(e){}}
+  else if(v==="fin"){$("#vEnd").hidden=false;capsUI("fin");$("#prog").style.width="100%";
+    $("#score").textContent=`${hits}/${QUIZ.length}`;
+    $("#scoreTxt").textContent=hits===QUIZ.length?"Respondiste todo bien.":hits>=3?"Muy bien. Si quieres, repasa los capítulos que te costaron.":"Vale la pena volver a ver el recorrido.";
+    if(sound)play(D.extra.fin.voz);try{history.replaceState(null,"","#fin")}catch(e){}}
+  else{$("#vIntro").hidden=false;capsUI("");$("#prog").style.width="0"}
+  scrollTo({top:0});
+}
+function route(){const h=location.hash.slice(1);const m=h.match(/^paso-(\d+)$/);
+  if(m&&D){i=Math.min(Math.max(+m[1]-1,0),D.pasos.length-1);show("tour")}
+  else if(h==="repaso")show("quiz");else show("intro")}
+addEventListener("hashchange",()=>{if(D)route()});
+capsUI("");
+</script>
